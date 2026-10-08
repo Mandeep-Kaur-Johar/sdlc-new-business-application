@@ -1,0 +1,8 @@
+flowchart TB
+    BusinessUser(["Business User"]) -->|Signs in and manages records| System["New Business Application"]
+    Manager(["Manager"]) -->|Views dashboards and exports reports| System
+    PlatformAdmin(["Platform Administrator"]) -->|Configures system and reviews audit activity| System
+    System -->|Federated identity - OIDC| EntraID(["Microsoft Entra ID - external"])
+    System -->|Sends notifications - SMTP| EmailService(["Email Service - external"])
+    System -->|Streams logs and metrics| Monitoring(["Azure Monitor - external"])
+    System -->|Stores exported report files| Storage(["Azure Blob Storage - external"])

@@ -1,0 +1,81 @@
+erDiagram
+    USER {
+        guid Id PK
+        string Email UK "PII"
+        string DisplayName "PII"
+        string PasswordHash
+        bool IsActive
+        datetime CreatedUtc
+        datetime LastSignInUtc
+    }
+    ROLE {
+        guid Id PK
+        string Name UK
+        string Description
+    }
+    PERMISSION {
+        guid Id PK
+        string Code UK
+        string Description
+    }
+    USER_ROLE {
+        guid UserId PK,FK
+        guid RoleId PK,FK
+        datetime AssignedUtc
+    }
+    ROLE_PERMISSION {
+        guid RoleId PK,FK
+        guid PermissionId PK,FK
+    }
+    BUSINESS_RECORD {
+        guid Id PK
+        string Reference UK
+        string Title
+        string Status
+        string Category
+        guid OwnerUserId FK
+        datetime CreatedUtc
+        datetime UpdatedUtc
+    }
+    RECORD_ATTACHMENT {
+        guid Id PK
+        guid RecordId FK
+        string FileName
+        string BlobUri
+        int SizeBytes
+    }
+    AUDIT_EVENT {
+        guid Id PK
+        guid UserId FK
+        string EventType
+        string EntityName
+        guid EntityId
+        string IpAddress "PII"
+        datetime OccurredUtc
+    }
+    SYSTEM_CONFIGURATION {
+        guid Id PK
+        string ConfigKey UK
+        string ConfigValue
+        string Environment
+        guid UpdatedByUserId FK
+        datetime UpdatedUtc
+    }
+    REPORT_EXPORT {
+        guid Id PK
+        guid RequestedByUserId FK
+        string ReportType
+        string Format
+        string BlobUri
+        string Status
+        datetime RequestedUtc
+    }
+    USER ||--o{ USER_ROLE : "is assigned"
+    ROLE ||--o{ USER_ROLE : "grants"
+    ROLE ||--o{ ROLE_PERMISSION : "contains"
+    PERMISSION ||--o{ ROLE_PERMISSION : "granted by"
+    USER ||--o{ BUSINESS_RECORD : "owns"
+    BUSINESS_RECORD ||--o{ RECORD_ATTACHMENT : "has"
+    USER ||--o{ AUDIT_EVENT : "triggers"
+    USER ||--o{ SYSTEM_CONFIGURATION : "updates"
+    USER ||--o{ REPORT_EXPORT : "requests"

@@ -1,0 +1,45 @@
+flowchart TB
+    Users(["End Users - Business User, Manager, Platform Administrator"])
+    subgraph AzureRegion["Azure Subscription - Primary Region East US"]
+        subgraph Edge["Edge and Network"]
+            FrontDoor["Azure Front Door with WAF"]
+            APIM["Azure API Management"]
+        end
+        subgraph Compute["Compute - Azure App Service Plan P1v3"]
+            SWA["React UI - Azure Static Web App"]
+            AppAPI["ASP.NET Core 8 Web API - 3 instances"]
+        end
+        subgraph DataTier["Data Tier - Private Endpoints Only"]
+            SQLDB[("Azure SQL Database - Business Critical")]
+            Redis[("Azure Cache for Redis")]
+            Blob[("Azure Blob Storage - Report Exports")]
+        end
+        subgraph SecurityTier["Security"]
+            KeyVault["Azure Key Vault"]
+            EntraID["Microsoft Entra ID"]
+            NSG["Network Security Group"]
+        end
+        subgraph Monitoring["Observability"]
+            AppInsights["Application Insights"]
+            LogAnalytics["Log Analytics Workspace"]
+        end
+    end
+    subgraph DR["Azure Secondary Region West US - Disaster Recovery"]
+        SQLGeo[("Azure SQL Geo-Replica")]
+    end
+
+    Users -->|HTTPS 443 TLS 1.2+| FrontDoor
+    FrontDoor -->|HTTPS| SWA
+    FrontDoor -->|HTTPS| APIM
+    APIM -->|HTTPS with JWT| AppAPI
+    SWA -->|HTTPS/JSON| APIM
+    AppAPI -->|TDS private endpoint| SQLDB
+    AppAPI -->|TLS private endpoint| Redis
+    AppAPI -->|HTTPS private endpoint| Blob
+    AppAPI -->|Managed identity| KeyVault
+    AppAPI -->|OIDC token validation| EntraID
+    NSG -.->|Protects subnets| DataTier
+    AppAPI -.->|Telemetry| AppInsights
+    APIM -.->|Diagnostic logs| LogAnalytics
+    AppInsights --> LogAnalytics
+    SQLDB -->|Active geo-replication| SQLGeo

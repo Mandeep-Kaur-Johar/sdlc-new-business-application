@@ -1,0 +1,19 @@
+flowchart LR
+    Dev(["Developer"]) -->|Push feature branch| Repo["GitHub Repository sdlc-new-business-application"]
+    Repo -->|Pull request to main| PR["Pull Request Validation"]
+    PR --> Build["Build - dotnet build and npm run build"]
+    Build --> UnitTest["Unit Tests - 80 percent coverage gate"]
+    UnitTest --> CodeScan["Static Analysis - CodeQL and SonarQube"]
+    CodeScan --> DepScan["Dependency and Secret Scanning"]
+    DepScan --> Artifact["Publish Versioned Artifact"]
+    Artifact --> DeployDev["Deploy to Dev"]
+    DeployDev --> IntTest["Integration and API Tests"]
+    IntTest --> DeployQA["Deploy to QA"]
+    DeployQA --> E2E["End-to-End and Performance Tests"]
+    E2E --> Approval{"Manual Release Approval"}
+    Approval -->|Approved| DeployProd["Deploy to Production - Blue Green Slot Swap"]
+    Approval -->|Rejected| Repo
+    DeployProd --> Smoke["Production Smoke Tests"]
+    Smoke -->|Pass| Monitor["Monitor - Application Insights"]
+    Smoke -->|Fail| Rollback["Automatic Slot Rollback"]
+    Rollback --> Monitor

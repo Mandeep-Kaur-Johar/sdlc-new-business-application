@@ -1,0 +1,55 @@
+flowchart TB
+    subgraph IdentityAPI["Identity API"]
+        AuthController["AuthController"]
+        RoleController["RoleController"]
+        TokenService["TokenService"]
+        PermissionEvaluator["PermissionEvaluator"]
+    end
+    subgraph RecordsAPI["Business Records API"]
+        RecordController["RecordController"]
+        RecordValidator["RecordValidator"]
+        RecordService["RecordService"]
+        SearchService["SearchService"]
+    end
+    subgraph ReportsAPI["Reporting API"]
+        DashboardController["DashboardController"]
+        ExportController["ExportController"]
+        AggregationService["AggregationService"]
+        ExportRenderer["ExportRenderer"]
+    end
+    subgraph AdministrationAPI["Administration API"]
+        ConfigController["ConfigController"]
+        AuditController["AuditController"]
+        ConfigService["ConfigService"]
+        AuditService["AuditService"]
+    end
+    subgraph DataAccess["Data Access Layer"]
+        UserRepository["UserRepository"]
+        RecordRepository["RecordRepository"]
+        AuditRepository["AuditRepository"]
+        ConfigRepository["ConfigRepository"]
+    end
+
+    AuthController --> TokenService
+    RoleController --> PermissionEvaluator
+    TokenService --> UserRepository
+    PermissionEvaluator --> UserRepository
+    RecordController --> RecordValidator
+    RecordController --> RecordService
+    RecordController --> SearchService
+    RecordService --> RecordRepository
+    SearchService --> RecordRepository
+    DashboardController --> AggregationService
+    ExportController --> ExportRenderer
+    AggregationService --> RecordRepository
+    ExportRenderer --> RecordRepository
+    ConfigController --> ConfigService
+    AuditController --> AuditService
+    ConfigService --> ConfigRepository
+    AuditService --> AuditRepository
+    RecordService -.->|Writes audit entry| AuditService
+    ConfigService -.->|Writes audit entry| AuditService
+    UserRepository -->|EF Core 8| SQLDB[("Azure SQL Database")]
+    RecordRepository -->|EF Core 8| SQLDB
+    AuditRepository -->|EF Core 8| SQLDB
+    ConfigRepository -->|EF Core 8| SQLDB

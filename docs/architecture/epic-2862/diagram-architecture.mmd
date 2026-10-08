@@ -1,0 +1,54 @@
+flowchart TB
+    subgraph Client["Frontend - React TypeScript"]
+        SignInUI["Sign-In UI"]
+        RecordsUI["Business Records UI"]
+        DashboardUI["Operational Dashboard UI"]
+        AdminUI["Admin Configuration UI"]
+    end
+    subgraph Gateway["API Gateway"]
+        APIGW["Azure API Management"]
+    end
+    subgraph Backend["Backend - .NET 8 ASP.NET Core Web API"]
+        AuthAPI["Identity API"]
+        RecordsAPI["Business Records API"]
+        ReportingAPI["Reporting API"]
+        AdminAPI["Administration API"]
+    end
+    subgraph Security["Security"]
+        JWT["JWT Authentication"]
+        RBAC["Role-Based Authorization"]
+        KeyVault["Azure Key Vault"]
+    end
+    subgraph Data["Data Layer"]
+        SQLDB[("Azure SQL Database")]
+        Cache[("Azure Cache for Redis")]
+        BlobStore[("Azure Blob Storage - Report Exports")]
+    end
+    subgraph Observability["Observability"]
+        AppInsights["Application Insights"]
+        LogAnalytics["Log Analytics"]
+    end
+
+    SignInUI -->|HTTPS/JSON| APIGW
+    RecordsUI -->|HTTPS/JSON| APIGW
+    DashboardUI -->|HTTPS/JSON| APIGW
+    AdminUI -->|HTTPS/JSON| APIGW
+    APIGW -->|Rate limit 1000 rpm| AuthAPI
+    APIGW -->|Bearer token| RecordsAPI
+    APIGW -->|Bearer token| ReportingAPI
+    APIGW -->|Bearer token| AdminAPI
+    AuthAPI -->|Issue and validate token| JWT
+    RecordsAPI -->|Check permissions| RBAC
+    ReportingAPI -->|Check permissions| RBAC
+    AdminAPI -->|Check permissions| RBAC
+    AuthAPI -->|Fetch secrets| KeyVault
+    RecordsAPI -->|SQL| SQLDB
+    ReportingAPI -->|SQL read replica| SQLDB
+    ReportingAPI -->|Cache query results| Cache
+    ReportingAPI -->|Write export files| BlobStore
+    AdminAPI -->|SQL| SQLDB
+    AuthAPI -.->|Telemetry| AppInsights
+    RecordsAPI -.->|Telemetry| AppInsights
+    ReportingAPI -.->|Telemetry| AppInsights
+    AdminAPI -.->|Telemetry| AppInsights
+    AppInsights --> LogAnalytics

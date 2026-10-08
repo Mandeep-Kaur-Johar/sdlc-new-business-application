@@ -1,0 +1,45 @@
+sequenceDiagram
+    actor BusinessUser as Business User
+    participant UI as React UI
+    participant APIGW as API Gateway
+    participant AuthAPI as Identity API
+    participant RBAC as Role-Based Authorization
+    participant RecordsAPI as Business Records API
+    participant AuditService as Audit Service
+    participant SQLDB as Azure SQL Database
+
+    BusinessUser->>UI: Enter credentials
+    activate UI
+    UI->>APIGW: POST /api/auth/sign-in
+    APIGW->>AuthAPI: Forward sign-in request
+    activate AuthAPI
+    alt Credentials valid
+        AuthAPI->>SQLDB: SELECT user and roles
+        SQLDB-->>AuthAPI: User record
+        AuthAPI-->>UI: 200 OK with JWT access token
+    else Credentials invalid
+        AuthAPI-->>UI: 401 Unauthorized
+        UI-->>BusinessUser: Show sign-in error
+    end
+    deactivate AuthAPI
+    BusinessUser->>UI: Submit new business record
+    UI->>APIGW: POST /api/records with Bearer token
+    APIGW->>RecordsAPI: Forward create request
+    activate RecordsAPI
+    RecordsAPI->>RBAC: Evaluate Records.Create permission
+    alt Permission granted
+        RBAC-->>RecordsAPI: Allowed
+        RecordsAPI->>SQLDB: INSERT business record
+        SQLDB-->>RecordsAPI: Record identifier
+        RecordsAPI->>AuditService: Log RecordCreated event
+        AuditService->>SQLDB: INSERT audit entry
+        RecordsAPI-->>UI: 201 Created
+        UI-->>BusinessUser: Show confirmation
+    else Permission denied
+        RBAC-->>RecordsAPI: Denied
+        RecordsAPI->>AuditService: Log AccessDenied event
+        RecordsAPI-->>UI: 403 Forbidden
+        UI-->>BusinessUser: Show access denied message
+    end
+    deactivate RecordsAPI
+    deactivate UI

@@ -1,0 +1,23 @@
+flowchart LR
+    Start(["User opens application"]) --> SignIn["Sign-In - Story 2864"]
+    SignIn -->|JWT issued| RoleCheck["Role-Based Access evaluation - Story 2865"]
+    RoleCheck -->|Authorized| Landing["Application Landing Page"]
+    RoleCheck -->|Denied| Denied(["403 Access Denied"])
+    Landing --> CreateRecord["Create Business Record - Story 2867"]
+    Landing --> SearchRecord["Search and View Records - Story 2868"]
+    Landing --> Dashboard["Operational Dashboard - Story 2870"]
+    Landing --> Export["Export Reports - Story 2871"]
+    Landing --> AdminConfig["System Configuration - Story 2874"]
+    Landing --> AuditView["Audit Activity - Story 2873"]
+    CreateRecord -->|Persist| SQLDB[("Azure SQL Database")]
+    SearchRecord -->|Query| SQLDB
+    Dashboard -->|Aggregate| SQLDB
+    Export -->|Generate file| BlobStore[("Azure Blob Storage")]
+    AdminConfig -->|Persist settings| SQLDB
+    AuditView -->|Read audit events| SQLDB
+    CreateRecord -.->|Audit event| AuditLog["Audit Event Writer"]
+    AdminConfig -.->|Audit event| AuditLog
+    Export -.->|Audit event| AuditLog
+    AuditLog --> SQLDB
+    SQLDB --> End(["Response returned to user"])
+    BlobStore --> End
